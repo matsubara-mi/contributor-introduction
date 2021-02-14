@@ -1,7 +1,5 @@
 package com.example.contributorintruductionapp
 
-import android.content.Intent
-import android.media.session.PlaybackState
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
