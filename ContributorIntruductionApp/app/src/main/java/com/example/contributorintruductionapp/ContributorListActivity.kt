@@ -2,45 +2,53 @@ package com.example.contributorintruductionapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.Gravity
-import android.widget.LinearLayout
-import android.widget.TextView
-import okhttp3.*
-import java.io.IOException
+import android.util.Log
+import android.widget.*
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.contributorintruductionapp.ServiceBuilder.buildService
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class ContributorListActivity<JSonObject> : AppCompatActivity() {
-    private val client:OkHttpClient = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_contributor_list)
-
-        val url:String = "https://api.github.com/repos/googlesamples/android-architecture-components/contributors"
-        val body: FormBody = FormBody.Builder().build()
-        val handler = Handler(Looper.getMainLooper())
-        val textView: TextView = findViewById<TextView>(R.id.textView)
-
-        getContributorData(url, handler, textView)
+        loadContributors()
     }
 
-    private fun getContributorData (url: String, handler: Handler, textView: TextView) {
-        val request = Request.Builder().url(url).build()
+    private fun loadContributors() {
+        val destinationService = buildService(ContributorListService::class.java)
+        val requestCall = destinationService.getContributorList()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call?, e: IOException?) {
-                println("fail : $e")
+        requestCall.enqueue(object : Callback<List<ContributorData>> {
+            override fun onFailure(call: Call<List<ContributorData>>, t: Throwable) {
+                Toast.makeText(this@ContributorListActivity, "error $t", Toast.LENGTH_SHORT)
+                    .show()
             }
 
-            override fun onResponse(call: Call, response: Response) {
-                if(response.isSuccessful) {
-                    response.body()?.let {
-                        val responseText: String? = response.body()?.string()
-                        handler.post() {
-                            textView.text = responseText
-                        }
+            override fun onResponse(
+                call: Call<List<ContributorData>>,
+                response: Response<List<ContributorData>>
+            ) {
+                Log.d("Response", "onResponse: ${response.body()}")
+                if (response.isSuccessful) {
+                    val contributorList = response.body()!!
+                    Log.d("Response", "contributorList size : ${contributorList.size}")
+                    findViewById<RecyclerView>(R.id.contributor_recycler).apply {
+                        setHasFixedSize(true)
+                        layoutManager =
+                            GridLayoutManager(this@ContributorListActivity, 2)
+                        adapter = ContributorListAdapter(response.body()!!)
                     }
+                } else {
+                    Toast.makeText(
+                        this@ContributorListActivity,
+                        "${response.message()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         })
