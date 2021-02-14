@@ -1,8 +1,10 @@
 package com.example.contributorintruductionapp
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -33,10 +35,7 @@ class ContributorListActivity<JSonObject> : AppCompatActivity() {
                 call: Call<List<ContributorData>>,
                 response: Response<List<ContributorData>>
             ) {
-                Log.d("Response", "onResponse: ${response.body()}")
                 if (response.isSuccessful) {
-                    val contributorList = response.body()!!
-                    Log.d("Response", "contributorList size : ${contributorList.size}")
                     findViewById<RecyclerView>(R.id.contributor_recycler).apply {
                         setHasFixedSize(true)
                         layoutManager =
